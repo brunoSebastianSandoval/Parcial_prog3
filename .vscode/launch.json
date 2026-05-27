@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-EcorideApplication<ecoride>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.edu.unlar.ecoride.EcorideApplication",
+            "projectName": "ecoride",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
