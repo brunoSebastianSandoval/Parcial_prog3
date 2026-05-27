@@ -1,5 +1,5 @@
 Examen Parcial Programación III
-
+Alumno: Bruno Sandoval Sebastian
 Este repositorio contiene la implementación del sistema central de "EcoRide", una plataforma para gestionar el desbloqueo y cobro de vehículos eléctricos (Monopatines y Bicicletas Eléctricas), desarrollado como examen práctico.
 
 ## 🛠️ Tecnologías Utilizadas
@@ -22,7 +22,7 @@ El usuario "Isma Flores" alquila un monopatín con batería suficiente pagando c
 
 ###  2. Caso de Éxito: Usuario Premium (Descuento aplicado)
 La usuaria "Penélope Lopez" alquila un vehículo. Como es Premium, el sistema le aplica un 15% de descuento automáticamente.
-* **URL:** [http://localhost:8080/api/alquiler/desbloquear?idUsuario=USR02&patente=AAC111&metodoPago=BILLETERA](http://localhost:8080/api/alquiler/desbloquear?idUsuario=USR02&patente=AAC111&metodoPago=BILLETERA)
+* **URL:** [http://localhost:8080/api/alquiler/desbloquear?idUsuario=USR02&patente=AAC111&metodoPago=BILLETERA](http://localhost:8080/api/alquiler/desbloquear?idUsuario=USR02&patente=BAB222&metodoPago=BILLETERA)
 * **Resultado Esperado:** Cobro exitoso de $425.0.
 
 ###  3. Alarma de Negocio: Batería Insuficiente
