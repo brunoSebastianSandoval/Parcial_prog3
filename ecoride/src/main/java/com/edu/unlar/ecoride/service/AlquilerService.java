@@ -14,7 +14,7 @@ public class AlquilerService {
     // Constructor para inicializar datos de prueba
     public AlquilerService() {
         // Mock de datos para testing de la mesa de examen
-        Usuario u1 = new Usuario("USR01", "Isma Flores", "REGULAR");
+        Usuario u1 = new Usuario("USR11", "Isma Flores", "REGULAR");
         Usuario u2 = new Usuario("USR02", "penelope Lopez", "PREMIUM");
         usuarios.add(u1);
         usuarios.add(u2);
