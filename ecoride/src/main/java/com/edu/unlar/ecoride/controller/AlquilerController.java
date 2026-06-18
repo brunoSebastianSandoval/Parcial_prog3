@@ -28,5 +28,6 @@ public class AlquilerController {
         
         return ResponseEntity.ok(resultado);
     }
+    
 }
 
