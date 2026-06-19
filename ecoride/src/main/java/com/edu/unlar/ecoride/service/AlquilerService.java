@@ -1,6 +1,7 @@
 package com.edu.unlar.ecoride.service;
 import com.edu.unlar.ecoride.model.*;
 import org.springframework.stereotype.Service;
+import com.edu.unlar.ecoride.strategy.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,5 +105,22 @@ public class AlquilerService {
             }
         }
         return null;
+    }
+    
+
+
+    
+    private EstrategiaTarifa estrategiaActual = new TarifaEstandar();
+
+    // Método clave para cambiar la tarifa en tiempo real (según clima, horario, etc.)
+    public void cambiarEstrategiaTarifa(EstrategiaTarifa nuevaEstrategia) {
+        this.estrategiaActual = nuevaEstrategia;
+    }
+
+    // Método para calcular el costo total usando el patrón Strategy
+    public double calcularCostoViaje(Vehiculo vehiculo, int minutos) {
+        // Obtenemos la tarifa base del monopatín y delegamos el cálculo matemático a la estrategia activa
+        double tarifaBase = vehiculo.getTarifaFijaBase();
+        return this.estrategiaActual.calcularCosto(tarifaBase, minutos);
     }
 }
