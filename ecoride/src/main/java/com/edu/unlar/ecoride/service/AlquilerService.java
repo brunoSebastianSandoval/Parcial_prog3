@@ -1,20 +1,28 @@
 package com.edu.unlar.ecoride.service;
+
 import com.edu.unlar.ecoride.model.*;
 import org.springframework.stereotype.Service;
 import com.edu.unlar.ecoride.strategy.*;
+import com.edu.unlar.ecoride.state.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AlquilerService {
 
-    // Almacenamiento temporal nativo en memoria
-    private List<EstacionAnclaje> estaciones = new ArrayList<>();
-    private List<Usuario> usuarios = new ArrayList<>();
+    // REQUERIMIENTO B.1: Reemplazamos la búsqueda en listas por un HashMap global indexado por patente
+    // Esto asegura Acceso Instantáneo O(1) sin importar la escala del sistema.
+    private final Map<String, Vehiculo> vehiculosMap = new HashMap<>();
+    // Mantenemos una relación para saber de qué estación remover el vehículo
+    private final Map<String, EstacionAnclaje> estacionPorVehiculoMap = new HashMap<>();
+    
+    private final List<Usuario> usuarios = new ArrayList<>();
+    private EstrategiaTarifa estrategiaActual = new TarifaEstandar();
 
     // Constructor para inicializar datos de prueba
     public AlquilerService() {
-        // Mock de datos para testing de la mesa de examen
         Usuario u1 = new Usuario("USR11", "Isma Flores", "REGULAR");
         Usuario u2 = new Usuario("USR02", "penelope Lopez", "PREMIUM");
         usuarios.add(u1);
@@ -27,7 +35,7 @@ public class AlquilerService {
 
         BicicletaElectrica b1 = new BicicletaElectrica(1500);
         b1.setPatente("BAB222");
-        b1.setPorcentajeBateria(10); // Genera alerta de batería insuficiente (<15%)
+        b1.setPorcentajeBateria(10); // Generará error de batería
         b1.setTarifaFijaBase(600.0);
 
         EstacionAnclaje est1 = new EstacionAnclaje();
@@ -35,7 +43,12 @@ public class AlquilerService {
         est1.getVehiculosDisponibles().add(m1);
         est1.getVehiculosDisponibles().add(b1);
         
-        estaciones.add(est1);
+        // Indexamos los vehículos en el mapa global para que su acceso sea instantáneo O(1)
+        vehiculosMap.put(m1.getPatente().toUpperCase(), m1);
+        estacionPorVehiculoMap.put(m1.getPatente().toUpperCase(), est1);
+
+        vehiculosMap.put(b1.getPatente().toUpperCase(), b1);
+        estacionPorVehiculoMap.put(b1.getPatente().toUpperCase(), est1);
     }
 
     public String procesarDesbloqueo(AlquilerRequest request) {
@@ -44,57 +57,56 @@ public class AlquilerService {
             return "Error de negocio: Usuario no registrado.";
         }
 
-        //  Localizar el vehículo dentro de la estación a través de su patente (Búsqueda iterativa secuencial)
-        EstacionAnclaje estacionContenedora = null;
-        Vehiculo vehiculoEncontrado = null;
-
-        for (int i = 0; i < estaciones.size(); i++) {
-            EstacionAnclaje est = estaciones.get(i);
-            for (int j = 0; j < est.getVehiculosDisponibles().size(); j++) {
-                Vehiculo v = est.getVehiculosDisponibles().get(j);
-                if (v.getPatente().equalsIgnoreCase(request.getPatente())) {
-                    vehiculoEncontrado = v;
-                    estacionContenedora = est;
-                    break;
-                }
-            }
-            if (vehiculoEncontrado != null) break;
-        }
+        //  Acceso directo por clave en O(1)
+        // Eliminamos los bucles anidados "for" que penalizaban el rendimiento
+        String patenteBuscada = request.getPatente().toUpperCase();
+        Vehiculo vehiculoEncontrado = vehiculosMap.get(patenteBuscada);
 
         // Regla de Alerta 1: Vehículo No Encontrado
         if (vehiculoEncontrado == null) {
             return "Alarma del Sistema: Vehículo No Encontrado.";
         }
 
-        //  Validar que el nivel de batería sea apto para circular
         // Regla de Alerta 2: Batería Insuficiente (< 15%)
         if (vehiculoEncontrado.getPorcentajeBateria() < 15) {
             return "Alarma del Sistema: Batería Insuficiente. Operación bloqueada.";
         }
 
-        //  Calcular el importe final del desbloqueo considerando las características del usuario
-        double importeFinal = vehiculoEncontrado.getTarifaFijaBase();
-        if (usuario.getTipoUsuario().equalsIgnoreCase("PREMIUM")) {
-            // Aplicar beneficio exclusivo: Descuento fijo del 15% por ejemplo
-            importeFinal = importeFinal * 0.85;
+        //  Aplicamos el Patrón State de forma rígida
+        // El vehículo intenta cambiar su estado. Si está en reparación o viaje, el método
+        // lanzará una IllegalStateException, controlando las transiciones sin IFs.
+        try {
+            vehiculoEncontrado.desbloquear();
+        } catch (IllegalStateException e) {
+            return "Alarma del Sistema: " + e.getMessage();
         }
 
-        //. Desacoplamiento de la creación de pagos y efectuar cobro
-        // 1. Usá el nombre EXACTO de tu archivo (con el detalle de la l y la o)
-        ProcesarPago procesador = DesacopladorPagosFactory.crearProcesador(request.getMetodoPago());
+        // : Cálculo Adaptativo de Tarifa Base de Desbloqueo (Estrategia Activa)
+        // Nota: El enunciado pide aplicar diferentes criterios económicos intercambiables
+        double importeFinal = estrategiaActual.calcularCosto(vehiculoEncontrado.getTarifaFijaBase(), 1); // Usamos 1 para costo inicial fijado
         
+        if (usuario.getTipoUsuario().equalsIgnoreCase("PREMIUM")) {
+            importeFinal = importeFinal * 0.85; // Mantiene beneficio exclusivo
+        }
+
+        // Desacoplamiento de la creación de pagos y efectuar cobro
+        ProcesarPago procesador = DesacopladorPagosFactory.crearProcesador(request.getMetodoPago());
         if (procesador == null) {
+            // Revertimos el estado si el pago falla
+            vehiculoEncontrado.finalizarViaje(); 
             return "Error de negocio: Medio de pago no soportado.";
         }
         
-        // 2. Llamá al método con su nombre completo
         procesador.procesarCobro(importeFinal);
 
-        // Remover el vehículo de la estación tras el alquiler exitoso
-        estacionContenedora.getVehiculosDisponibles().remove(vehiculoEncontrado);
+        // Remover el vehículo de la estructura física y lógica por alquiler exitoso
+        EstacionAnclaje estacionContenedora = estacionPorVehiculoMap.get(patenteBuscada);
+        if (estacionContenedora != null) {
+            estacionContenedora.getVehiculosDisponibles().remove(vehiculoEncontrado);
+        }
 
-        // . Retornar respuesta exitosa detallando el rodado y el monto cobrado
         return "Desbloqueo Exitoso. Vehículo Patente: " + vehiculoEncontrado.getPatente() 
+                + " | Estado: " + vehiculoEncontrado.getEstadoActual().getNombreEstado()
                 + " | Monto cobrado: $" + importeFinal;
     }
 
@@ -106,20 +118,13 @@ public class AlquilerService {
         }
         return null;
     }
-    
 
-
-    
-    private EstrategiaTarifa estrategiaActual = new TarifaEstandar();
-
-    // Método clave para cambiar la tarifa en tiempo real (según clima, horario, etc.)
+    // Método para cambiar la tarifa en tiempo real (según clima, horario, etc.)
     public void cambiarEstrategiaTarifa(EstrategiaTarifa nuevaEstrategia) {
         this.estrategiaActual = nuevaEstrategia;
     }
 
-    // Método para calcular el costo total usando el patrón Strategy
     public double calcularCostoViaje(Vehiculo vehiculo, int minutos) {
-        // Obtenemos la tarifa base del monopatín y delegamos el cálculo matemático a la estrategia activa
         double tarifaBase = vehiculo.getTarifaFijaBase();
         return this.estrategiaActual.calcularCosto(tarifaBase, minutos);
     }
