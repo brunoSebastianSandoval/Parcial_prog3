@@ -10,7 +10,7 @@ import java.util.Set;
 @Service
 public class GpsService {
 
-     Procesamiento lineal ultra-eficiente O(N)
+    // REQUERIMIENTO B.2: Procesamiento lineal ultra-eficiente O(N)
     public List<CoordenadaGPS> deduplicarReportes(List<CoordenadaGPS> reportesDuplicados) {
         if (reportesDuplicados == null) {
             return new ArrayList<>();
