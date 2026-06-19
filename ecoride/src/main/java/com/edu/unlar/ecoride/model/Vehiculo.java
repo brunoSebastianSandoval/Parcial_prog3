@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class Vehiculo {
+public abstract class Vehiculo implements Comparable<Vehiculo> {
     private String patente;
     private int porcentajeBateria; // 0 a 100
     private double tarifaFijaBase;
@@ -28,6 +28,11 @@ public abstract class Vehiculo {
     // Setter para que los estados cambien la fase del ciclo de vida
     public void setEstado(estadoVehiculo nuevoEstado) {
         this.estadoActual = nuevoEstado;
+    }
+
+    @Override
+    public int compareTo(Vehiculo otro) {
+        return this.patente.compareTo(otro.patente);
     }
 
     // Tus getters y setters del primer parcial se mantienen abajo...

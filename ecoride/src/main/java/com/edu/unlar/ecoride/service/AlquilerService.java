@@ -128,4 +128,25 @@ public class AlquilerService {
         double tarifaBase = vehiculo.getTarifaFijaBase();
         return this.estrategiaActual.calcularCosto(tarifaBase, minutos);
     }
+    // Lista ordenada por Batería Ascendente (Criterio Natural)
+    public List<Vehiculo> obtenerFlotaPorPrioridadCarga() {
+        // Convertimos los vehículos de nuestro mapa indexado a una lista tradicional
+        List<Vehiculo> lista = new ArrayList<>(this.vehiculosMap.values());
+        
+        // Ordena usando el compareTo() de la clase Vehiculo (Menor a Mayor batería)
+        java.util.Collections.sort(lista); 
+        return lista;
+    }
+
+    //  Lista ordenada por Tarifa Descendente (Criterio Alternativo)
+    public List<Vehiculo> obtenerFlotaPorCostoBase() {
+        List<Vehiculo> lista = new ArrayList<>(this.vehiculosMap.values());
+        
+        // Ordena usando la clase comparadora tradicional que creamos (Mayor a Menor tarifa)
+        java.util.Collections.sort(lista, new com.edu.unlar.ecoride.strategy.ComparadorTarifaDescendente());
+        return lista;
+    }
+    public Vehiculo buscarPorPatenteMetodoTradicional(String patente) {
+    return this.vehiculosMap.get(patente.toUpperCase());
+}
 }
