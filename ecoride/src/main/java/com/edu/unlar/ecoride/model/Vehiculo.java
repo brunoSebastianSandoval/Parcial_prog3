@@ -25,7 +25,8 @@ public abstract class Vehiculo implements Comparable<Vehiculo> {
         this.estadoActual.enviarAMantenimiento(this);
     }
 
-    // Setter para que los estados cambien la fase del ciclo de vida
+    
+    
     public void setEstado(estadoVehiculo nuevoEstado) {
         this.estadoActual = nuevoEstado;
     }
@@ -35,7 +36,7 @@ public abstract class Vehiculo implements Comparable<Vehiculo> {
         return this.patente.compareTo(otro.patente);
     }
 
-    // Tus getters y setters del primer parcial se mantienen abajo...
+    
     public String getPatente() { return patente; }
     public int getPorcentajeBateria() { return porcentajeBateria; }
     public double getTarifaFijaBase() { return tarifaFijaBase; }

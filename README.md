@@ -44,3 +44,5 @@ Se intenta realizar una operación con un ID de usuario que no está registrado 
 *Desarrollado para la cátedra de Programación III.*
 ## Diagrama de Clases UML
 ![Diagrama de Clases EcoRide](diagrama.png)
+## digrama clases UML de las nuevas implementaciones
+![Diagrama de Clases EcoRide](diagrama2.png)
